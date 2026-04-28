@@ -4,34 +4,42 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="manifest" href="manifest.json">
-    <title>Workout Pro Timer</title>
+    <title>Minimalist Workout</title>
     <style>
-        :root { --accent: #00e676; --bg: #121212; --card: #1e1e1e; --stop: #cf6679; --pause: #2196F3; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #e0e0e0; margin: 0; padding: 20px; }
-        .container { max-width: 450px; margin: auto; }
-        h2 { text-align: center; color: var(--accent); letter-spacing: 1px; }
+        :root { --accent: #00e676; --bg: #121212; --card: #1e1e1e; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 100%; max-width: 400px; }
+        h2 { text-align: center; color: var(--accent); margin-bottom: 30px; letter-spacing: 2px; }
         
-        .setup-card { background: var(--card); padding: 20px; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        .row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-        label { font-size: 0.9rem; color: #aaa; flex: 1; }
+        .field-group { margin-bottom: 25px; text-align: center; }
+        .field-label { display: block; font-size: 0.85rem; color: var(--accent); text-transform: uppercase; margin-bottom: 8px; font-weight: bold; letter-spacing: 1px; }
         
-        input[type="text"], input[type="number"], select { 
-            background: #2c2c2c; border: 1px solid #444; color: white; padding: 10px; border-radius: 8px; font-size: 1rem; 
+        /* Estilo de los inputs */
+        input[type="text"] { 
+            background: none; border: none; border-bottom: 2px solid #333; color: white; 
+            font-size: 1.2rem; text-align: center; width: 80%; padding: 5px; outline: none;
         }
-        .time-picker { display: flex; gap: 5px; flex: 1.5; justify-content: flex-end; }
-        .time-picker select { width: 65px; text-align: center; }
-
-        button { border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; }
-        .add-btn { background: var(--accent); color: #000; font-size: 1.1rem; }
-
-        .exercise-item { background: #2a2a2a; padding: 12px; margin: 8px 0; border-radius: 10px; display: flex; justify-content: space-between; border-left: 5px solid var(--accent); }
+        input[type="text"]:focus { border-bottom-color: var(--accent); }
         
-        #active-workout { display: none; text-align: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 100; flex-direction: column; justify-content: center; align-items: center; }
-        .timer { font-size: 7rem; font-weight: 900; color: white; margin: 5px 0; font-variant-numeric: tabular-nums; }
-        .label { font-size: 1.8rem; text-transform: uppercase; color: var(--accent); font-weight: bold; }
-        .action-btns { display: flex; gap: 10px; width: 85%; }
-        .pause-btn { background: var(--pause); color: white; }
-        .stop-btn { background: var(--stop); color: white; }
+        input[type="number"] { 
+            background: #222; border: 1px solid #444; color: white; font-size: 1.5rem; 
+            text-align: center; width: 60px; border-radius: 8px; padding: 5px; 
+        }
+
+        /* Estilo del selector 00:00 */
+        .time-selector { display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 1.5rem; }
+        .time-selector select { 
+            background: #222; border: 1px solid #444; color: white; font-size: 1.5rem; 
+            padding: 5px 10px; border-radius: 8px; appearance: none; text-align: center;
+        }
+
+        .add-btn { background: var(--accent); color: black; border: none; padding: 15px; border-radius: 50px; font-weight: bold; width: 100%; font-size: 1rem; margin-top: 10px; cursor: pointer; }
+        
+        .exercise-item { background: var(--card); padding: 15px; margin: 10px 0; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; width: 100%; box-sizing: border-box; }
+        
+        /* Pantalla Activa */
+        #active-workout { display: none; text-align: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 100; flex-direction: column; justify-content: center; }
+        .timer-big { font-size: 8rem; font-weight: bold; margin: 10px 0; }
     </style>
 </head>
 <body>
@@ -39,135 +47,99 @@
 <div class="container" id="main-ui">
     <h2>MI RUTINA</h2>
     
-    <div class="setup-card">
-        <input type="text" id="ex-name" placeholder="Nombre: Sentadillas" style="width: 94%; margin-bottom: 20px;">
-        
-        <div class="row">
-            <label>Series:</label>
-            <input type="number" id="ex-sets" value="1" min="1" style="width: 50px; text-align: center;">
-        </div>
-
-        <div class="row">
-            <label>Tiempo Serie:</label>
-            <div class="time-picker">
-                <select id="work-m"></select><span>:</span><select id="work-s"></select>
-            </div>
-        </div>
-
-        <div class="row">
-            <label>Descanso (Serie):</label>
-            <div class="time-picker">
-                <select id="rest-m"></select><span>:</span><select id="rest-s"></select>
-            </div>
-        </div>
-
-        <div class="row">
-            <label>Descanso (Ejer.):</label>
-            <div class="time-picker">
-                <select id="gap-m"></select><span>:</span><select id="gap-s"></select>
-            </div>
-        </div>
-
-        <button class="add-btn" onclick="addExercise()">+ AÑADIR EJERCICIO</button>
+    <div class="field-group">
+        <span class="field-label">Nombre del Ejercicio</span>
+        <input type="text" id="ex-name" placeholder="Ej: Flexiones">
     </div>
 
-    <div id="exercise-list"></div>
-    <button id="start-btn" style="display:none; background: white; color: black;" onclick="startWorkout()">INICIAR ENTRENAMIENTO</button>
-    <button id="clear-btn" style="display:none; background: transparent; color: #ff5252; border: 1px solid #ff5252;" onclick="clearRoutine()">BORRAR TODO</button>
+    <div class="field-group">
+        <span class="field-label">Series</span>
+        <input type="number" id="ex-sets" value="3" min="1">
+    </div>
+
+    <div class="field-group">
+        <span class="field-label">Tiempo de Serie</span>
+        <div class="time-selector">
+            <select id="work-m"></select> : <select id="work-s"></select>
+        </div>
+    </div>
+
+    <div class="field-group">
+        <span class="field-label">Descanso entre Series</span>
+        <div class="time-selector">
+            <select id="rest-m"></select> : <select id="rest-s"></select>
+        </div>
+    </div>
+
+    <div class="field-group">
+        <span class="field-label">Descanso entre Ejercicios</span>
+        <div class="time-selector">
+            <select id="gap-m"></select> : <select id="gap-s"></select>
+        </div>
+    </div>
+
+    <button class="add-btn" onclick="addExercise()">+ AÑADIR EJERCICIO</button>
+
+    <div id="exercise-list" style="margin-top: 30px;"></div>
+    <button id="start-btn" style="display:none; background: white; color: black; margin-top: 20px; border-radius: 50px; padding: 15px; font-weight: bold; border: none; width: 100%;" onclick="startWorkout()">COMENZAR RUTINA</button>
 </div>
 
 <div id="active-workout">
-    <div id="current-ex-name" style="font-size: 2.2rem; font-weight: bold;"></div>
-    <div id="status-label" class="label">LISTO</div>
-    <div class="timer" id="timer-display">00:00</div>
-    <div id="current-set-info" style="color: #888; margin-bottom: 20px;"></div>
-    
-    <div class="action-btns">
-        <button class="pause-btn" id="pause-resume-btn" onclick="togglePause()">PAUSAR</button>
-        <button class="stop-btn" onclick="location.reload()">SALIR</button>
-    </div>
+    <div id="current-ex-name" style="font-size: 2rem; color: var(--accent);"></div>
+    <div id="status-label" style="font-size: 1.2rem; margin-top: 10px;">TRABAJO</div>
+    <div class="timer-big" id="timer-display">00:00</div>
+    <div id="current-set-info" style="color: #666;"></div>
+    <button onclick="location.reload()" style="background: #ff5252; color: white; border: none; padding: 10px 30px; border-radius: 50px; margin-top: 30px;">DETENER</button>
 </div>
 
 <script>
     let exercises = JSON.parse(localStorage.getItem('myRoutine')) || [];
-    let isPaused = false;
-    let timeLeft = 0;
 
-    // Llenar los selectores de tiempo (0-59)
-    function populateSelects() {
-        const selects = ['work-m', 'work-s', 'rest-m', 'rest-s', 'gap-m', 'gap-s'];
-        selects.forEach(id => {
-            const s = document.getElementById(id);
+    function populate() {
+        const ids = ['work-m', 'work-s', 'rest-m', 'rest-s', 'gap-m', 'gap-s'];
+        ids.forEach(id => {
+            const el = document.getElementById(id);
             for(let i=0; i<60; i++) {
-                let opt = document.createElement('option');
-                opt.value = i;
-                opt.innerHTML = i.toString().padStart(2, '0');
-                s.appendChild(opt);
+                let o = document.createElement('option');
+                o.value = i; o.text = i.toString().padStart(2, '0');
+                el.add(o);
             }
         });
-        // Valores por defecto lógicos
-        document.getElementById('work-s').value = 30;
-        document.getElementById('rest-s').value = 15;
+        document.getElementById('work-s').value = 30; // Default 30 seg
     }
 
     window.onload = () => { 
-        populateSelects();
-        if(exercises.length > 0) renderExercises(); 
+        populate(); 
+        render(); 
     };
 
     function addExercise() {
         const name = document.getElementById('ex-name').value || "Ejercicio";
         const sets = parseInt(document.getElementById('ex-sets').value);
-        
-        // Convertir todo a segundos para la lógica interna
-        const work = (parseInt(document.getElementById('work-m').value) * 60) + parseInt(document.getElementById('work-s').value);
-        const rest = (parseInt(document.getElementById('rest-m').value) * 60) + parseInt(document.getElementById('rest-s').value);
-        const gap = (parseInt(document.getElementById('gap-m').value) * 60) + parseInt(document.getElementById('gap-s').value);
+        const work = (parseInt(document.getElementById('work-m').value)*60) + parseInt(document.getElementById('work-s').value);
+        const rest = (parseInt(document.getElementById('rest-m').value)*60) + parseInt(document.getElementById('rest-s').value);
+        const gap = (parseInt(document.getElementById('gap-m').value)*60) + parseInt(document.getElementById('gap-s').value);
 
-        exercises.push({ name, sets, work, rest, gap });
-        saveAndRender();
+        exercises.push({name, sets, work, rest, gap});
+        localStorage.setItem('myRoutine', JSON.stringify(exercises));
+        render();
         document.getElementById('ex-name').value = '';
     }
 
-    function saveAndRender() {
-        localStorage.setItem('myRoutine', JSON.stringify(exercises));
-        renderExercises();
-    }
-
-    function renderExercises() {
+    function render() {
         const list = document.getElementById('exercise-list');
         list.innerHTML = exercises.map((e, i) => `
             <div class="exercise-item">
-                <span><strong>${e.name}</strong> (${e.sets} series)</span>
-                <button onclick="removeEx(${i})" style="width: auto; background: none; color: #ff5252; margin: 0;">✕</button>
+                <span><b>${e.name}</b> (${e.sets} series)</span>
+                <span onclick="remove(${i})" style="color: #ff5252; font-weight: bold; cursor: pointer;">ELIMINAR</span>
             </div>
         `).join('');
-        const hasItems = exercises.length > 0;
-        document.getElementById('start-btn').style.display = hasItems ? 'block' : 'none';
-        document.getElementById('clear-btn').style.display = hasItems ? 'block' : 'none';
+        document.getElementById('start-btn').style.display = exercises.length > 0 ? 'block' : 'none';
     }
 
-    function removeEx(i) { exercises.splice(i, 1); saveAndRender(); }
-    function clearRoutine() { if(confirm("¿Borrar rutina?")) { exercises = []; saveAndRender(); } }
+    function remove(i) { exercises.splice(i, 1); localStorage.setItem('myRoutine', JSON.stringify(exercises)); render(); }
 
-    function formatTime(s) {
-        const m = Math.floor(s / 60);
-        const sec = s % 60;
-        return `${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
-    }
-
-    function speak(text) {
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'es-ES';
-        window.speechSynthesis.speak(utterance);
-    }
-
-    function togglePause() {
-        isPaused = !isPaused;
-        const btn = document.getElementById('pause-resume-btn');
-        btn.innerText = isPaused ? "REANUDAR" : "PAUSAR";
-        btn.style.background = isPaused ? "#4CAF50" : "#2196F3";
-    }
+    function speak(t) { const u = new SpeechSynthesisUtterance(t); u.lang = 'es-ES'; window.speechSynthesis.speak(u); }
 
     async function startWorkout() {
         document.getElementById('active-workout').style.display = 'flex';
@@ -176,49 +148,31 @@
             speak(ex.name);
             for (let s = 1; s <= ex.sets; s++) {
                 await runTimer(ex.work, "TRABAJO", ex.name, `Serie ${s} de ${ex.sets}`, "#00e676");
-                if (s < ex.sets) {
-                    await runTimer(ex.rest, "DESCANSO", "Recupera", `Próxima serie en...`, "#ffb300");
-                } else if (i < exercises.length - 1) {
-                    await runTimer(ex.gap, "CAMBIO", "Prepárate", `Siguiente: ${exercises[i+1].name}`, "#2196F3");
-                }
+                if (s < ex.sets) await runTimer(ex.rest, "DESCANSO", "Recupera", "Próxima serie...", "#ffb300");
+                else if (i < exercises.length - 1) await runTimer(ex.gap, "CAMBIO", "Prepárate", `Siguiente: ${exercises[i+1].name}`, "#2196F3");
             }
         }
-        speak("Entrenamiento terminado");
+        speak("Terminado");
         location.reload();
     }
 
-    function runTimer(seconds, status, name, subtext, color) {
+    function runTimer(sec, status, name, sub, color) {
         return new Promise(resolve => {
-            timeLeft = seconds;
+            let left = sec;
+            const disp = document.getElementById('timer-display');
             document.getElementById('status-label').innerText = status;
             document.getElementById('status-label').style.color = color;
             document.getElementById('current-ex-name').innerText = name;
-            document.getElementById('current-set-info').innerText = subtext;
+            document.getElementById('current-set-info').innerText = sub;
 
-            const interval = setInterval(() => {
-                if (!isPaused) {
-                    document.getElementById('timer-display').innerText = formatTime(timeLeft);
-                    if (timeLeft <= 3 && timeLeft > 0) beep(440);
-                    if (timeLeft <= 0) {
-                        clearInterval(interval);
-                        beep(880);
-                        resolve();
-                    }
-                    timeLeft--;
-                }
+            const timer = setInterval(() => {
+                const m = Math.floor(left / 60);
+                const s = left % 60;
+                disp.innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                if (left <= 0) { clearInterval(timer); resolve(); }
+                left--;
             }, 1000);
         });
-    }
-
-    function beep(freq) {
-        const ctx = new AudioContext();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.frequency.value = freq;
-        gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.5);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(); osc.stop(ctx.currentTime + 0.5);
     }
 </script>
 </body>
