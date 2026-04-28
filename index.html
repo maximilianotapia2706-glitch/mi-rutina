@@ -2,24 +2,32 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Personal Timer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="manifest" href="manifest.json">
+    <title>Workout Pro Timer</title>
     <style>
         :root { --accent: #00e676; --bg: #121212; --card: #1e1e1e; --stop: #cf6679; --pause: #2196F3; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #e0e0e0; margin: 0; padding: 20px; }
         .container { max-width: 450px; margin: auto; }
-        h2 { text-align: center; color: var(--accent); }
+        h2 { text-align: center; color: var(--accent); letter-spacing: 1px; }
         
-        .setup-card { background: var(--card); padding: 20px; border-radius: 15px; margin-bottom: 20px; }
-        input { background: #2c2c2c; border: 1px solid #444; color: white; padding: 10px; border-radius: 8px; width: 90%; margin-bottom: 10px; font-size: 1rem; }
-        button { border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; }
-        .add-btn { background: var(--accent); color: #000; }
-        .clear-btn { background: transparent; color: #ff5252; border: 1px solid #ff5252; margin-top: 20px; }
+        .setup-card { background: var(--card); padding: 20px; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+        label { font-size: 0.9rem; color: #aaa; flex: 1; }
+        
+        input[type="text"], input[type="number"], select { 
+            background: #2c2c2c; border: 1px solid #444; color: white; padding: 10px; border-radius: 8px; font-size: 1rem; 
+        }
+        .time-picker { display: flex; gap: 5px; flex: 1.5; justify-content: flex-end; }
+        .time-picker select { width: 65px; text-align: center; }
 
-        .exercise-item { background: #2a2a2a; padding: 12px; margin: 8px 0; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid var(--accent); }
+        button { border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; }
+        .add-btn { background: var(--accent); color: #000; font-size: 1.1rem; }
+
+        .exercise-item { background: #2a2a2a; padding: 12px; margin: 8px 0; border-radius: 10px; display: flex; justify-content: space-between; border-left: 5px solid var(--accent); }
         
         #active-workout { display: none; text-align: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 100; flex-direction: column; justify-content: center; align-items: center; }
-        .timer { font-size: 8rem; font-weight: 900; color: white; margin: 10px 0; }
+        .timer { font-size: 7rem; font-weight: 900; color: white; margin: 5px 0; font-variant-numeric: tabular-nums; }
         .label { font-size: 1.8rem; text-transform: uppercase; color: var(--accent); font-weight: bold; }
         .action-btns { display: flex; gap: 10px; width: 85%; }
         .pause-btn { background: var(--pause); color: white; }
@@ -32,24 +40,46 @@
     <h2>MI RUTINA</h2>
     
     <div class="setup-card">
-        <input type="text" id="ex-name" placeholder="Nombre (ej: Sentadillas)">
-        <input type="number" id="ex-sets" placeholder="Series">
-        <input type="number" id="ex-work" placeholder="Tiempo Serie (seg)">
-        <input type="number" id="ex-rest" placeholder="Descanso entre series (seg)">
-        <input type="number" id="ex-gap" placeholder="Descanso entre ejercicios (seg)">
+        <input type="text" id="ex-name" placeholder="Nombre: Sentadillas" style="width: 94%; margin-bottom: 20px;">
+        
+        <div class="row">
+            <label>Series:</label>
+            <input type="number" id="ex-sets" value="1" min="1" style="width: 50px; text-align: center;">
+        </div>
+
+        <div class="row">
+            <label>Tiempo Serie:</label>
+            <div class="time-picker">
+                <select id="work-m"></select><span>:</span><select id="work-s"></select>
+            </div>
+        </div>
+
+        <div class="row">
+            <label>Descanso (Serie):</label>
+            <div class="time-picker">
+                <select id="rest-m"></select><span>:</span><select id="rest-s"></select>
+            </div>
+        </div>
+
+        <div class="row">
+            <label>Descanso (Ejer.):</label>
+            <div class="time-picker">
+                <select id="gap-m"></select><span>:</span><select id="gap-s"></select>
+            </div>
+        </div>
+
         <button class="add-btn" onclick="addExercise()">+ AÑADIR EJERCICIO</button>
     </div>
 
     <div id="exercise-list"></div>
-    
     <button id="start-btn" style="display:none; background: white; color: black;" onclick="startWorkout()">INICIAR ENTRENAMIENTO</button>
-    <button class="clear-btn" id="clear-btn" style="display:none;" onclick="clearRoutine()">BORRAR TODO</button>
+    <button id="clear-btn" style="display:none; background: transparent; color: #ff5252; border: 1px solid #ff5252;" onclick="clearRoutine()">BORRAR TODO</button>
 </div>
 
 <div id="active-workout">
     <div id="current-ex-name" style="font-size: 2.2rem; font-weight: bold;"></div>
     <div id="status-label" class="label">LISTO</div>
-    <div class="timer" id="timer-display">00</div>
+    <div class="timer" id="timer-display">00:00</div>
     <div id="current-set-info" style="color: #888; margin-bottom: 20px;"></div>
     
     <div class="action-btns">
@@ -63,24 +93,38 @@
     let isPaused = false;
     let timeLeft = 0;
 
-    // Cargar rutina al abrir
-    window.onload = () => { if(exercises.length > 0) renderExercises(); };
+    // Llenar los selectores de tiempo (0-59)
+    function populateSelects() {
+        const selects = ['work-m', 'work-s', 'rest-m', 'rest-s', 'gap-m', 'gap-s'];
+        selects.forEach(id => {
+            const s = document.getElementById(id);
+            for(let i=0; i<60; i++) {
+                let opt = document.createElement('option');
+                opt.value = i;
+                opt.innerHTML = i.toString().padStart(2, '0');
+                s.appendChild(opt);
+            }
+        });
+        // Valores por defecto lógicos
+        document.getElementById('work-s').value = 30;
+        document.getElementById('rest-s').value = 15;
+    }
+
+    window.onload = () => { 
+        populateSelects();
+        if(exercises.length > 0) renderExercises(); 
+    };
 
     function addExercise() {
-        const name = document.getElementById('ex-name').value;
-        const sets = document.getElementById('ex-sets').value;
-        const work = document.getElementById('ex-work').value;
+        const name = document.getElementById('ex-name').value || "Ejercicio";
+        const sets = parseInt(document.getElementById('ex-sets').value);
         
-        if(!name || !sets || !work) return alert("Completa los campos obligatorios");
+        // Convertir todo a segundos para la lógica interna
+        const work = (parseInt(document.getElementById('work-m').value) * 60) + parseInt(document.getElementById('work-s').value);
+        const rest = (parseInt(document.getElementById('rest-m').value) * 60) + parseInt(document.getElementById('rest-s').value);
+        const gap = (parseInt(document.getElementById('gap-m').value) * 60) + parseInt(document.getElementById('gap-s').value);
 
-        exercises.push({
-            name: name,
-            sets: parseInt(sets),
-            work: parseInt(work),
-            rest: parseInt(document.getElementById('ex-rest').value || 0),
-            gap: parseInt(document.getElementById('ex-gap').value || 0)
-        });
-        
+        exercises.push({ name, sets, work, rest, gap });
         saveAndRender();
         document.getElementById('ex-name').value = '';
     }
@@ -95,25 +139,21 @@
         list.innerHTML = exercises.map((e, i) => `
             <div class="exercise-item">
                 <span><strong>${e.name}</strong> (${e.sets} series)</span>
-                <button onclick="removeEx(${i})" style="width: auto; background: none; color: #ff5252; margin: 0; padding: 5px;">✕</button>
+                <button onclick="removeEx(${i})" style="width: auto; background: none; color: #ff5252; margin: 0;">✕</button>
             </div>
         `).join('');
-        
         const hasItems = exercises.length > 0;
         document.getElementById('start-btn').style.display = hasItems ? 'block' : 'none';
         document.getElementById('clear-btn').style.display = hasItems ? 'block' : 'none';
     }
 
-    function removeEx(index) {
-        exercises.splice(index, 1);
-        saveAndRender();
-    }
+    function removeEx(i) { exercises.splice(i, 1); saveAndRender(); }
+    function clearRoutine() { if(confirm("¿Borrar rutina?")) { exercises = []; saveAndRender(); } }
 
-    function clearRoutine() {
-        if(confirm("¿Seguro que quieres borrar toda la rutina?")) {
-            exercises = [];
-            saveAndRender();
-        }
+    function formatTime(s) {
+        const m = Math.floor(s / 60);
+        const sec = s % 60;
+        return `${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
     }
 
     function speak(text) {
@@ -143,7 +183,7 @@
                 }
             }
         }
-        speak("Entrenamiento completado");
+        speak("Entrenamiento terminado");
         location.reload();
     }
 
@@ -157,7 +197,7 @@
 
             const interval = setInterval(() => {
                 if (!isPaused) {
-                    document.getElementById('timer-display').innerText = timeLeft;
+                    document.getElementById('timer-display').innerText = formatTime(timeLeft);
                     if (timeLeft <= 3 && timeLeft > 0) beep(440);
                     if (timeLeft <= 0) {
                         clearInterval(interval);
